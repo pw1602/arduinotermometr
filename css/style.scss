@@ -1,0 +1,46 @@
+#main {
+    text-align: center;
+    margin: 0 auto;
+}
+
+#chartSelect {
+    margin-left: 50px;
+    width: 50%;
+    height: 30px;
+}
+
+#chartTemp {
+    width: 50%;
+    height: 30px;
+}
+
+.flex {
+    display: flex;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+
+    li {
+        float: left;
+        margin: 0.5px;
+    }
+}
+
+.left {
+    float: left;
+    width: 25%;
+    margin-left: 50px;
+}
+
+.right {
+    float: right;
+    width: 70%;
+}
+
+.left, .right {
+    margin-top: 20px;
+}
