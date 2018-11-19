@@ -237,9 +237,9 @@ function getAvgTable(data, data2, type) {
 
         if (type == 'W') {
             const day = DAYS[data[i].dzien - 1];
-            avgWeek.push([day, parseInt(temp), parseInt(temp2)]);
+            avgWeek.push([day, temp, temp2]);
         } else {
-            avgMonth.push([parseInt(data[i].dzien), parseInt(temp), parseInt(temp2)]);
+            avgMonth.push([parseInt(data[i].dzien), temp, temp2]);
         }
     }
 
@@ -278,10 +278,10 @@ function getDayAndWeekTable(data, type) {
             const temp = selectedTemp === 'F' ? data[i].tempF : selectedTemp === 'K' ? data[i].tempK : data[i].tempC;
 
             if (type == 'D') {
-                table.push([data[i].godzina, parseInt(temp)]);
+                table.push([data[i].godzina, temp]);
             } else {
                 const day = DAYS[data[i].dzien - 1];
-                table.push([day, parseInt(temp)]);
+                table.push([day, temp]);
             }
         }
     }
