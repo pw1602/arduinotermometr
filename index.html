@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Termometr Arduino</title>
+        <title>Termometr na NodeMCU</title>
 
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"/>
         <link rel="stylesheet" type="text/css" href="core/jquery-ui-1.12.1/jquery-ui.css"/>
@@ -13,7 +13,7 @@
 
     <body>
         <div id="main">
-            <h1>Termometr Arduino</h1>
+            <h1>Termometr na NodeMCU</h1>
 
             <div class="left">
                 <h4>Pomiary na dzień: <span id="choosedDate"></span></h3>
@@ -40,6 +40,8 @@
 
             <div class="right">
                 <div class="btn-toolbar mb-3" role="toolbar">
+                    <button id="btnTable" type="button" class="btn btn-outline-primary"></button>
+
                     <div class="btn-group mr-2" role="group">
                       <button id="btnCelcius" type="button" class="btn btn-outline-info">°C</button>
                       <button id="btnFahrenheit" type="button" class="btn btn-outline-info">°F</button>
@@ -52,8 +54,9 @@
                 </div>
 
                 <div class="charts">
-                    <div id="dayChart"></div><br>
-                    <div id="avgWeekChart"></div><br>
+                    <div id="dayChart"></div><br/>
+                    <div id="weekChart"></div><br/>
+                    <div id="avgWeekChart"></div><br/>
                     <div id="avgMonthChart"></div>
                 </div>
             </div>

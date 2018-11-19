@@ -46,4 +46,9 @@ ul li {
 .left, .right {
   margin-top: 20px;
 }
+
+#btnTable {
+  margin-right: 10px;
+  margin-left: 5px;
+}
 /*# sourceMappingURL=style.css.map */
