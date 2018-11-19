@@ -162,7 +162,7 @@ function getWeek(fromDate){
     return result;
 }
 
-google.charts.load('current', {'packages':['corechart', 'line']});
+google.charts.load('current', {'packages':['corechart', 'line', 'calendar']});
 google.charts.setOnLoadCallback(chart);
 
 function chart() {
@@ -172,11 +172,13 @@ function chart() {
     const weekData = new google.visualization.arrayToDataTable(getDayAndWeekTable(dataFromDB[1], 'W'));
     const avgWeekData = new google.visualization.arrayToDataTable(getAvgTable(dataFromDB[2], dataFromDB[3], 'W'));
     const avgMonthData = new google.visualization.arrayToDataTable(getAvgTable(dataFromDB[4], dataFromDB[5], 'M'));
+    const calendarData = new google.visualization.arrayToDataTable(getCalendar(dataFromDB[6]));
     
     const dayChart = new google.visualization.LineChart(document.getElementById('dayChart'));
     const weekChart = new google.visualization.LineChart(document.getElementById('weekChart'));
     const avgWeekChart = new google.visualization.LineChart(document.getElementById('avgWeekChart'));
     const avgMonthChart = new google.visualization.LineChart(document.getElementById('avgMonthChart'));
+    const calendarChart = new google.visualization.Calendar(document.getElementById('calendarChart'));
 
     const dayOptions = {
         title: 'Godzinowa temperatura (' + selectedDate + ')',
@@ -204,10 +206,18 @@ function chart() {
         colors: ['#cc0000', '#0052cc']
     };
 
+    const calendarOptions = {
+        title: 'Średnia temperatura w danym dniu',
+        calendar: {
+            daysOfWeek: 'NPWŚCPS',
+        },
+    };
+
     dayChart.draw(dayData, dayOptions);
     weekChart.draw(weekData, weekOptions);
     avgWeekChart.draw(avgWeekData, avgWeekOptions);
     avgMonthChart.draw(avgMonthData, avgMonthOptions);
+    calendarChart.draw(calendarData, calendarOptions);
 }
 
 function insertIntoHTMLTable(data) {
@@ -283,6 +293,26 @@ function getDayAndWeekTable(data, type) {
                 const day = DAYS[data[i].dzien - 1];
                 table.push([day, temp]);
             }
+        }
+    }
+
+    return table;
+}
+
+function getCalendar(data) {
+    if (!Array.isArray(data)) {
+        console.error('[getCalendar] Dane muszą być tablicą!');
+        return;
+    }
+
+    const table = [['Dzień', 'Średnia temperatura']];
+
+    if (data.length === 0) {
+        table.push([0, 0]);
+    } else {
+        for (let i = 0; i < data.length; i++) {
+            const temp = selectedTemp === 'F' ? data[i].tempF : selectedTemp === 'K' ? data[i].tempK : data[i].tempC;
+            table.push([new Date(data[i].dataPomiaru), temp]);
         }
     }
 
