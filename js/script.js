@@ -1,15 +1,16 @@
-'use strict';
+"use strict";
 
-const DAYS = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
-
-let dataFromDB = null;
+let dataFromDB = [];
 let selectedDate = 0;
-let selectedTemp = 'C';
+let selectedTemp = "C";
 let selectedMonth = 0;
 let selectedWeek = 0;
+let selectedYear = 0;
+let monthDates = [];
 
-const btnTable = $('#btnTable');
-const datePicker = $('#datePicker');
+const btnTable = $("#btnTable");
+const datePicker = $("#datePicker");
+const weekPicker = $("#weekPicker");
 
 $(function() {
     $.datepicker.regional["pl"];
@@ -20,32 +21,54 @@ $(function() {
     let yy = date.getFullYear();
 
     if (dd < 10) {
-        dd = '0' + dd;
+        dd = "0" + dd;
     }
 
     if (mm < 10) {
-        mm = '0' + mm;
+        mm = "0" + mm;
     }
 
-    selectedDate = yy + '-' + mm + '-' + dd;
-    selectedMonth = mm - 1;
-    selectedWeek = getWeek(new Date(selectedDate));
+    selectedDate = yy + "-" + mm + "-" + dd;
+    selectedMonth = mm;
+    selectedWeek = getWeekRange(new Date(selectedDate));
+    selectedYear = yy;
     changeAllWebsiteDates(selectedDate);
     
-    btnTable.text('Schowaj tabelę');
+    btnTable.text("Schowaj tabelę");
 
     $.ajax({
         type: "post",
         url: "./php/get.php",
         data: {
             selectedDate: selectedDate,
-            type: 'dates'
+            type: "dates"
         },
         dataType: "json"
     })
     .done(function(res) {
-        datePicker.datepicker("option", "minDate", res[0][0].dataPomiaru);
-        datePicker.datepicker("option", "maxDate", res[1][0].dataPomiaru);
+        const firstDay = res[0][0].dataPomiaru;
+        const lastDay = res[1][0].dataPomiaru;
+        datePicker.datepicker("option", {minDate: firstDay, maxDate: lastDay});
+        weekPicker.datepicker("option", {minDate: firstDay, maxDate: lastDay});
+
+        monthDates = res[2];
+
+        const firstYear = new Date(firstDay).getFullYear();
+        const lastYear = new Date(lastDay).getFullYear();
+
+        for (let i = firstYear; i <= lastYear; i++) {
+            const option = `<option value="` + i + `">` + i + `</option>`;
+            $(option).appendTo("#yearPicker");
+            $(option).appendTo("#monthChartYearPicker");
+        }
+
+        for (let i = 0; i < res[2].length; i++) {
+            const data = res[2][i];
+            if (data.year == $("#monthChartYearPicker").val()) {
+                const month = `<option value="` + data.month + `">` + MONTHS[data.month - 1] + `</option>`;
+                $(month).appendTo("#monthChartMonthPicker");
+            }
+        }
     });
 
     $.ajax({
@@ -54,16 +77,46 @@ $(function() {
         data: {
             selectedDate: selectedDate,
             selectedWeek: selectedWeek,
-            type: 'data'
+            selectedYear: yy,
+            type: "all"
         },
         dataType: "json"
     })
     .done(function(res) {
         dataFromDB = res;
-
-        chart();
+        google.charts.load("current", {"packages":["corechart", "line", "calendar"], callback: drawChart, "language": "pl"});
         insertIntoHTMLTable(res[0]);
     });
+});
+
+weekPicker.datepicker({
+    dateFormat: "yy-mm-dd",
+    changeMonth: true,
+    changeYear: true,
+    showOtherMonths: true,
+    selectOtherMonths: true,
+    showButtonPanel: true,
+    showWeek: true,
+    firstDay: 0,
+    onSelect: function(dateText, inst) {
+        const week = getWeekRange(new Date(dateText));
+        $(this).val(week[0] + " do " + week[1]);
+
+        $.ajax({
+            type: "post",
+            url: "./php/get.php",
+            data: {
+                selectedWeek: week,
+                type: "week"
+            },
+            dataType: "json"
+        })
+        .done(function(res) {
+            dataFromDB[1] = res[0];
+            selectedWeek = week;
+            drawChart();
+        });
+    }
 });
 
 datePicker.datepicker({
@@ -75,12 +128,9 @@ datePicker.datepicker({
     showButtonPanel: true,
     showWeek: true,
     firstDay: 0,
-    onSelect: function(dateText) {
+    onSelect: function(dateText, inst) {
         if (this.value != selectedDate) {
             selectedDate = this.value;
-            
-            let tmp = $(this).datepicker('getDate');
-            selectedMonth = tmp.getMonth();
             
             return $(this).change();
         } //if
@@ -88,233 +138,176 @@ datePicker.datepicker({
 })
 .on("change", function() {
     changeAllWebsiteDates(selectedDate);
-    selectedWeek = getWeek(new Date(selectedDate));
 
     $.ajax({
         url: "./php/get.php",
         type: "post",
-        dataType: 'json',
+        dataType: "json",
         data: {
             selectedDate: selectedDate,
-            selectedWeek: selectedWeek,
-            type: 'data'
+            type: "day"
         }
     })
     .done(function(res) {
-        dataFromDB = res;
+        dataFromDB[0] = res[0];
 
-        chart();
+        drawChart();
         insertIntoHTMLTable(res[0]);
     });
 });
 
-$(window).on('resize', function() {
-    chart();
+$(window).on("resize", function() {
+    drawChart();
 });
 
-$('#btnCelcius').click(function(e) { 
+$("#btnCelcius").click(function(e) { 
     e.preventDefault();
-    selectedTemp = 'C';
-    chart();
+    selectedTemp = "C";
+    drawChart();
 });
 
-$('#btnFahrenheit').click(function(e) { 
+$("#btnFahrenheit").click(function(e) { 
     e.preventDefault();
-    selectedTemp = 'F';
-    chart();
+    selectedTemp = "F";
+    drawChart();
 });
 
-$('#btnKelvin').click(function(e) { 
+$("#btnKelvin").click(function(e) { 
     e.preventDefault();
-    selectedTemp = 'K';
-    chart();
+    selectedTemp = "K";
+    drawChart();
 });
 
 btnTable.click(function(e) {
     e.preventDefault();
     const text = btnTable.text();
 
-    $('.left').toggle();
+    $(".left").toggle();
 
-    if (text == 'Schowaj tabelę') {
-        btnTable.text('Pokaż tabelę');
-        $('.right').css('width', '100%');
-        chart();
+    if (text == "Schowaj tabelę") {
+        btnTable.text("Pokaż tabelę");
+        $(".right").css("width", "98%");
+        drawChart();
     } else {
-        btnTable.text('Schowaj tabelę');
-        $('.right').css('width', '70%');
-        chart();
+        btnTable.text("Schowaj tabelę");
+        $(".right").css("width", "70%");
+        drawChart();
     }
 });
 
-function changeAllWebsiteDates(date) {
-    $('#choosedDate').text(date);
-}
+$("#chartTab > li > a").click(function(e) {
+    e.preventDefault();
 
-function getWeek(fromDate){
-    const sunday = new Date(fromDate.setDate(fromDate.getDate() - fromDate.getDay()));
-    const result = [sunday.getFullYear() + '-' + (sunday.getMonth() + 1) + '-' + sunday.getDate()];
+    const id = $(this).attr("id");
+    draw(id);
 
-    while (sunday.setDate(sunday.getDate() + 1) && sunday.getDay() !== 0) {
-        result.push(sunday.getFullYear() + '-' + (sunday.getMonth() + 1) + '-' + sunday.getDate());
+    if (id != 'weekTab') {
+        $(".ui-weekpicker").off("mousemove");
+        $(".ui-weekpicker").off("mouseleave");
+        weekPicker.datepicker('widget').removeClass('ui-weekpicker');
+    } else {
+        weekPicker.datepicker('widget').addClass('ui-weekpicker');
+        $(".ui-weekpicker").on("mousemove", "tr", function() {
+            $(this).find("td a").addClass("ui-state-hover");
+        });
+        
+        $(".ui-weekpicker").on("mouseleave", "tr", function() {
+            $(this).find("td a").removeClass("ui-state-hover");
+        });
     }
-
-    return result;
-}
-
-google.charts.load('current', {'packages':['corechart', 'line', 'calendar']});
-google.charts.setOnLoadCallback(chart);
-
-function chart() {
-    const MONTHS = ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień"];
     
-    const dayData = new google.visualization.arrayToDataTable(getDayAndWeekTable(dataFromDB[0], 'D'));
-    const weekData = new google.visualization.arrayToDataTable(getDayAndWeekTable(dataFromDB[1], 'W'));
-    const avgWeekData = new google.visualization.arrayToDataTable(getAvgTable(dataFromDB[2], dataFromDB[3], 'W'));
-    const avgMonthData = new google.visualization.arrayToDataTable(getAvgTable(dataFromDB[4], dataFromDB[5], 'M'));
-    const calendarData = new google.visualization.arrayToDataTable(getCalendar(dataFromDB[6]));
-    
-    const dayChart = new google.visualization.LineChart(document.getElementById('dayChart'));
-    const weekChart = new google.visualization.LineChart(document.getElementById('weekChart'));
-    const avgWeekChart = new google.visualization.LineChart(document.getElementById('avgWeekChart'));
-    const avgMonthChart = new google.visualization.LineChart(document.getElementById('avgMonthChart'));
-    const calendarChart = new google.visualization.Calendar(document.getElementById('calendarChart'));
+});
 
-    const dayOptions = {
-        title: 'Godzinowa temperatura (' + selectedDate + ')',
-        legend: { position: 'top' },
-        hAxis: {title: 'Godzina'},
-        colors: ['#dd8f00']
-    };
+$("#yearPicker").change(function(e) {
+    e.preventDefault();
 
-    const weekOptions = {
-        title: `Średnia tygodniowa temperatura (${selectedWeek[0]} - ${selectedWeek[6]})`,
-        legend: { position: 'top' },
-        colors: ['#dd8f00']
-    };
-    
-    const avgWeekOptions = {   
-        title: 'Średnia temperatura przypadająca na dany dzień tygodnia (' + MONTHS[selectedMonth] + ')',
-        legend: { position: 'top' },
-        colors: ['#cc0000', '#0052cc']
-    };
-    
-    const avgMonthOptions = {
-        title: 'Średnia temperatura przypadająca na dany dzień miesiąca (' + MONTHS[selectedMonth] + ')',
-        legend: { position: 'top' },
-        hAxis: {title: 'Dzień Miesiąca', format: '0'},
-        colors: ['#cc0000', '#0052cc']
-    };
+    $.ajax({
+        url: "./php/get.php",
+        type: "post",
+        dataType: "json",
+        data: {
+            selectedYear: $(this).val(),
+            type: "year"
+        }
+    })
+    .done(function(res) {
+        dataFromDB[6] = res[0];
+        drawChart();
+    });
+});
 
-    const calendarOptions = {
-        title: 'Średnia temperatura w danym dniu',
-        calendar: {
-            daysOfWeek: 'NPWŚCPS',
-        },
-    };
+$("#monthChartYearPicker").change(function(e) {
+    e.preventDefault();
 
-    dayChart.draw(dayData, dayOptions);
-    weekChart.draw(weekData, weekOptions);
-    avgWeekChart.draw(avgWeekData, avgWeekOptions);
-    avgMonthChart.draw(avgMonthData, avgMonthOptions);
-    calendarChart.draw(calendarData, calendarOptions);
-}
+    const monthPicker = $("#monthChartMonthPicker");
+    monthPicker.empty();
 
-function insertIntoHTMLTable(data) {
-    if (!Array.isArray(data)) {
-        console.error('[insertIntoHTMLTable] Dane muszą być tablicą!');
-        return;
-    }
-
-    $('#tableBody').empty();
-    for (let i = 0; i < data.length; i++) {
-        $('#tableBody').append('<tr><th scope="row">' + data[i].godzinaPomiaru + '</th><td>' + data[i].tempC + '</td><td>' + data[i].tempF + '</td><td>' + data[i].tempK + '</td></tr>');
-    }
-}
-
-function getAvgTable(data, data2, type) {
-    if (type != 'W' && type != 'M') {
-        console.error(`[getAvgTable] Podany typ jest niezgodny z danymi! (${type})`);
-        return;
-    }
-
-    const avgWeek = [['Dzień tygodnia', 'Dzień (06:00 - 19:00)', 'Noc (20:00 - 5:00)']];
-    const avgMonth = [['Dzień miesiąca', 'Dzień (06:00 - 19:00)', 'Noc (20:00 - 5:00)']];
-
-    for (let i = 0; i < data.length; i++) {
-        let temp = selectedTemp == 'F' ? data[i].tempF : selectedTemp == 'K' ? data[i].tempK : data[i].tempC;
-        let temp2 = selectedTemp == 'F' ? data2[i].tempF : selectedTemp == 'K' ? data2[i].tempK : data2[i].tempC;
-
-        if (type == 'W') {
-            const day = DAYS[data[i].dzien - 1];
-            avgWeek.push([day, temp, temp2]);
-        } else {
-            avgMonth.push([parseInt(data[i].dzien), temp, temp2]);
+    for (let i = 0; i < monthDates.length; i++) {
+        const data = monthDates[i];
+        if (data.year == $(this).val()) {
+            const option = `<option value="` + data.month + `">` + MONTHS[data.month - 1] + `</option>`
+            $(option).appendTo(monthPicker);
         }
     }
+});
 
-    if (avgMonth.length == 1) {
-        avgMonth.push([0, 0, 0]);
+$("#monthPicker").submit(function(e) {
+    e.preventDefault();
+
+    const year = $("#monthChartYearPicker").val();
+    const month = $("#monthChartMonthPicker").val();
+
+    if (year == selectedYear && month == selectedMonth) {
+        return;
     }
 
-    if (avgWeek.length == 1) {
-        avgWeek.push([0, 0, 0]);
-    }
+    $.ajax({
+        url: "./php/get.php",
+        type: "post",
+        dataType: "json",
+        data: {
+            selectedDate: month < 10 ? year + "-0" + month + "-01" : year + "-" + month + "-01",
+            type: "month"
+        }
+    })
+    .done(function(res) {
+        selectedMonth = month;
+        selectedYear = year;
+        dataFromDB[2] = res[0];
+        dataFromDB[3] = res[1];
+        dataFromDB[4] = res[2];
+        dataFromDB[5] = res[3];
+        drawChart();
+    });
+});
 
-    if (type == 'W') {
-        return avgWeek;
-    } else {
-        return avgMonth;
+function draw(id) {
+    switch(id) {
+        default: break;
+        
+        case "yearTab": {
+            setTimeout(drawCalendar, 50);
+            break;
+        }
+
+        case "monthTab": {
+            setTimeout(drawMonthChart, 50);
+            break;
+        }
+
+        case "weekTab": {
+            setTimeout(drawWeekChart, 50);
+            break;
+        }
+
+        case "dayTab": {
+            setTimeout(drawDayChart, 50);
+            break;
+        }
     }
 }
 
-function getDayAndWeekTable(data, type) {
-    if (!Array.isArray(data)) {
-        console.error('[getDayTable] Dane muszą być tablicą!');
-        return;
-    }
-
-    if (type != 'D' && type != 'W') {
-        console.error(`[getDayTable] Podany typ jest niezgodny z danymi! (${type})`);
-        return;
-    }
-
-    const table = type == 'D' ? [['Godzina', 'Temperatura']] : [['Dzień', 'Temperatura']];
-
-    if (data.length === 0) {
-        table.push([0, 0]);
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            const temp = selectedTemp === 'F' ? data[i].tempF : selectedTemp === 'K' ? data[i].tempK : data[i].tempC;
-
-            if (type == 'D') {
-                table.push([data[i].godzina, temp]);
-            } else {
-                const day = DAYS[data[i].dzien - 1];
-                table.push([day, temp]);
-            }
-        }
-    }
-
-    return table;
-}
-
-function getCalendar(data) {
-    if (!Array.isArray(data)) {
-        console.error('[getCalendar] Dane muszą być tablicą!');
-        return;
-    }
-
-    const table = [['Dzień', 'Średnia temperatura']];
-
-    if (data.length === 0) {
-        table.push([0, 0]);
-    } else {
-        for (let i = 0; i < data.length; i++) {
-            const temp = selectedTemp === 'F' ? data[i].tempF : selectedTemp === 'K' ? data[i].tempK : data[i].tempC;
-            table.push([new Date(data[i].dataPomiaru), temp]);
-        }
-    }
-
-    return table;
+function drawChart() {
+    const active = $("#chartTab a.active").attr("id");
+    draw(active);
 }

@@ -12,7 +12,7 @@
     </head>
 
     <body>
-        <div id="main">
+        <div id="main" class="text-monospace">
             <h1>Termometr na NodeMCU</h1>
 
             <div class="left">
@@ -40,25 +40,79 @@
 
             <div class="right">
                 <div class="btn-toolbar mb-3" role="toolbar">
-                    <button id="btnTable" type="button" class="btn btn-outline-primary"></button>
+                    <button id="btnTable" type="button" class="btn btn-outline-dark"></button>
 
                     <div class="btn-group mr-2" role="group">
                       <button id="btnCelcius" type="button" class="btn btn-outline-info">°C</button>
                       <button id="btnFahrenheit" type="button" class="btn btn-outline-info">°F</button>
                       <button id="btnKelvin" type="button" class="btn btn-outline-info">K</button>
                     </div>
-                    <div class="input-group">
-                        <input id="datePicker" class="form-control mr-sm-2" type="text" placeholder="Wybierz datę..." readonly/>
-                    </div>
-                    <small class="text-muted" style="margin: auto 0;">Pusta tabela oraz wykresy oznaczają brak danych.</span>
+                    <small class="text-muted" style="margin: auto 0;">Pusta tabela oraz wykresy oznaczają brak danych.</small>
                 </div>
 
                 <div class="charts">
-                    <div id="dayChart"></div><br/>
-                    <div id="weekChart"></div><br/>
-                    <div id="avgWeekChart"></div><br/>
-                    <div id="avgMonthChart"></div><br/>
-                    <div id="calendarChart"></div>
+                    <div class="card text-center">
+                        <div class="card-header">
+                            <ul class="nav nav-pills card-header-pills" id="chartTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="dayTab" data-toggle="tab" href="#day" role="tab" aria-controls="day" aria-selected="true">Dzienny</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="weekTab" data-toggle="tab" href="#week" role="tab" aria-controls="week" aria-selected="false">Tygodniowy</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="monthTab" data-toggle="tab" href="#month" role="tab" aria-controls="month" aria-selected="false">Miesięczny</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="yearTab" data-toggle="tab" href="#year" role="tab" aria-controls="year" aria-selected="false">Roczny</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="day" role="tabpanel" aria-labelledby="dayTab">
+                                <div class="card-body">
+                                    <div id="dayChart"></div>
+                                </div>
+                                <div class="card-footer">
+                                    <input id="datePicker" class="custom-select w-25" type="text" placeholder="Wybierz datę..." readonly/>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="week" role="tabpanel" aria-labelledby="weekTab">
+                                <div class="card-body">
+                                    <div id="weekChart"></div>
+                                </div>
+                                <div class="card-footer">
+                                    <input id="weekPicker" class="custom-select w-25" type="text" placeholder="Wybierz tydzień..." readonly/>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="month" role="tabpanel" aria-labelledby="monthTab">
+                                <div class="card-body">
+                                    <div id="avgWeekChart"></div>
+                                    <div id="avgMonthChart"></div>
+                                </div>
+                                <div class="card-footer">
+                                    <form id="monthPicker" class="form-inline justify-content-center">
+                                        <select id="monthChartMonthPicker" class="form-control mx-1 w-25" required></select>
+                                        <select id="monthChartYearPicker" class="form-control mx-1 w-25" required></select>
+                                        <button type="submit" class="btn btn-success mx-1">Pokaż</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="tab-pane" id="year" role="tabpanel" aria-labelledby="yearTab">
+                                <div class="card-body">
+                                    <div id="calendarChart"></div>
+                                </div>
+                                <div class="card-footer">
+                                    <label for="yearPicker">Wybierz rok:</label>
+                                    <select id="yearPicker" class="custom-select w-25"></select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -70,5 +124,7 @@
     <script src="core/jquery-ui-1.12.1/jquery-ui.js"></script>
     <script src="core/jquery-ui-1.12.1/datepicker-pl.js"></script>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="js/functions.js"></script>
+    <script type="text/javascript" src="js/charts.js"></script>
     <script type="text/javascript" src="js/script.js"></script>
 </html>
