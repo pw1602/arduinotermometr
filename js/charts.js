@@ -15,8 +15,7 @@ function drawCalendar() {
         colorAxis: {
             colors: ["#02a2ff", "#ff2402"]
         },
-        height: 175,
-        width: $(window).width()
+        height: 175
     };
 
     calendarChart.draw(calendarData, calendarOptions);
