@@ -97,7 +97,7 @@ function getCalendar(data) {
     } else {
         for (let i = 0; i < data.length; i++) {
             const temp = selectedTemp === "F" ? data[i].tempF : selectedTemp === "K" ? data[i].tempK : data[i].tempC;
-            table.push([new Date(data[i].dataPomiaru), parseFloat(temp.toFixed(4))]);
+            table.push([new Date(data[i].dataPomiaru), parseInt(temp)]);
         }
     }
 

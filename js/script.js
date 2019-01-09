@@ -57,7 +57,14 @@ $(function() {
         const lastYear = new Date(lastDay).getFullYear();
 
         for (let i = firstYear; i <= lastYear; i++) {
-            const option = `<option value="` + i + `">` + i + `</option>`;
+			let option = "";
+			
+			if (i == selectedYear) {
+				option = `<option value="` + i + `" selected>` + i + `</option>`;
+			} else {
+				option = `<option value="` + i + `">` + i + `</option>`;
+			}
+
             $(option).appendTo("#yearPicker");
             $(option).appendTo("#monthChartYearPicker");
         }
@@ -65,7 +72,14 @@ $(function() {
         for (let i = 0; i < res[2].length; i++) {
             const data = res[2][i];
             if (data.year == $("#monthChartYearPicker").val()) {
-                const month = `<option value="` + data.month + `">` + MONTHS[data.month - 1] + `</option>`;
+				let month = "";
+				
+				if (data.month == selectedMonth) {
+					month = `<option value="` + data.month + `" selected>` + MONTHS[data.month - 1] + `</option>`
+				} else {
+					month = `<option value="` + data.month + `">` + MONTHS[data.month - 1] + `</option>`
+				}
+
                 $(month).appendTo("#monthChartMonthPicker");
             }
         }
