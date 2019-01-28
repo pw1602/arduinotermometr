@@ -1,43 +1,55 @@
+@media only screen and (max-device-width: 768px) {
+	.left, .right {
+		float: none !important;
+		margin: 0 auto !important;
+		width: 50% !important;
+	}
+
+	.right {
+		width: 90% !important;
+	}
+}
+
 #main {
-  text-align: center;
-  margin: 0 auto;
+	text-align: center;
+	margin: 0 auto;
 }
 
 ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  overflow: auto;
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	overflow: auto;
 }
 
 ul li {
-  float: left;
-  margin: 0.5px;
+	float: left;
+	margin: 0.5px;
 }
 
 .left {
-  float: left;
-  width: 25%;
-  margin-left: 20px;
+	float: left;
+	width: 25%;
+	margin-left: 20px;
 }
 
 .right {
-  float: right;
-  width: 70%;
-  margin-right: 20px;
+	float: right;
+	width: 70%;
+	margin-right: 20px;
 }
 
 .left, .right {
-  margin-top: 20px;
+	margin-top: 20px;
 }
 
 #btnTable {
-  margin-right: 10px;
-  margin-left: 5px;
+	margin-right: 10px;
+	margin-left: 5px;
 }
 
 /*#calendarChart {
-  margin-left: 170px;
+	margin-left: 170px;
 }*/
 
 /*# sourceMappingURL=style.css.map */
